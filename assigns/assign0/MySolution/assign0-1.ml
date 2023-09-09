@@ -9,3 +9,5 @@ let rec
 myloop(n: int): int = 
 if fact(n) = 0 then n else myloop(n+1)
 ;;
+
+let myans = myloop(0);;
