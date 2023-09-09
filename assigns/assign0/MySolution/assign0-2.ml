@@ -1,5 +1,10 @@
-(* 
-  remember to test 0 and 1 
-  2 is the first prime number
-  use recursion!
-*)
+let rec
+primeHelper(x: int) (div: int) =
+if div <= 1 then true
+else if x mod div = 0 then false (* this number isn't prime *)
+else primeHelper x (div-1) (* try next version *)
+;;
+
+let isPrime(x: int) =
+  primeHelper x (x/2)
+;;
