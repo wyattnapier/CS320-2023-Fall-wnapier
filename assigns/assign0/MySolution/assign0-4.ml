@@ -25,10 +25,10 @@ let rec power (base: int) (expo: int) (prod: int): int =
    ;;
 
 let rec helper (sum: int) (s: string) (count: int): int =
-   if count > string_length (s) then sum
+   if count <= 0 then sum
    else if ord(string_get(s, count-1)) = 45 then sum * -1
    else
-      helper (sum + power (10) (count-1) (ord(string_get(s, count-1)) -48)) (s) (count + 1) (* flips order *)
+      helper (sum + power (10) (string_length s - count) (ord(string_get(s, count-1)) -48)) (s) (count - 1) (* flips order *)
       (* helper (sum + (power (10) (count) (1) * (ord(string_get(s, count-1))))-48) (s) (count+1) *)
 
       (* 
@@ -41,5 +41,5 @@ let rec helper (sum: int) (s: string) (count: int): int =
 ;;
 
 let str2int(cs: string): int =
-   helper 0 (cs) 1
+   helper 0 (cs) (string_length cs)
 ;;
