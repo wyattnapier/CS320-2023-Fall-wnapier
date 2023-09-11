@@ -63,7 +63,7 @@ for natural numbers x.
 
 (*
 Assign0-5: 10 points
-Please implement a function that returns the reverse of
+Please implement a function that returns the reverse
 a given string:
 fun stringrev(cs: string): string
 Note that you are not allowed to use string concatenation
