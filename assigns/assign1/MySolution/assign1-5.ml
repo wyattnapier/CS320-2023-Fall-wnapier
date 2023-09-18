@@ -7,3 +7,4 @@ return substring of streak
 
 let string_longest_ascend(xs: string): string = 
   substring xs 2 2
+;;
