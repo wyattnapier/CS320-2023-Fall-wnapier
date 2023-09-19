@@ -12,3 +12,4 @@ let string_avoid_1324(cs: string): bool =
       else if d >= string_length cs - 1 then my_loop a b (c + 1) (c + 2)
       else my_loop a b c (d + 1)
     in my_loop 0 1 2 3
+;;
