@@ -10,4 +10,3 @@ let string_avoid_132(cs: string): bool =
       else if c>= string_length cs -1 then my_loop a (b + 1) (b + 2)
       else my_loop a b (c+1)
     in my_loop 0 1 2
-
