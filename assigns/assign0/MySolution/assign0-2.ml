@@ -6,5 +6,6 @@ else primeHelper x (div-1) (* try next version *)
 ;;
 
 let isPrime(x: int) =
-  primeHelper x (x/2)
+  if x < 2 then false
+  else primeHelper x (x-1)
 ;;
