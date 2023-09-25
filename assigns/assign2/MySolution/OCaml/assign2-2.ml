@@ -20,32 +20,3 @@ let rec mylist_get_at(xs: 'a mylist)(i0: int): 'a =
     | MySnoc(xs1, x1) -> let n1 = mylist_length xs1 in if i0 < n1 then mylist_get_at xs1 i0 else (if i0 <= n1 then x1 else mylist_subscript_exn())
     | MyReverse(xs1) -> let n1 = mylist_length xs1 in if i0 <  n1 then mylist_get_at(xs1)(n1 - 1 - i0) else mylist_subscript_exn()
     | MyAppend2(xs1, xs2) -> if mylist_length(xs1) <= i0 then mylist_get_at(xs2)(i0 - mylist_length(xs1)) else mylist_get_at(xs1)(i0)
-
-
-(* ****** ****** *)
-let xs0 = MyNil
-let xs1 = MyCons(10, xs0)
-let xs2 = MySnoc(xs0, -10)
-let xs3 = MyAppend2(xs1, xs2)
-let xs4 = MyReverse(xs3)
-let xs5 = MyAppend2(xs4, xs4)
-let xs6 = MyAppend2(xs5, xs5)
-let xs7 = MyAppend2(xs6, xs6)
-;;
-
-let ( ) = assert(-10 = mylist_get_at(xs5)(0)) 
-(* ****** ****** *)
-let ( ) = assert(10 = mylist_get_at(xs7)(1))
-let ( ) = assert(10 = mylist_get_at(xs7)(3))
-let ( ) = assert(10 = mylist_get_at(xs7)(5))
-let ( ) = assert(10 = mylist_get_at(xs7)(7))
-;;
-(* ****** ****** *)
-let ( ) = assert(10 = -mylist_get_at(xs7)(0))
-let ( ) = assert(10 = -mylist_get_at(xs7)(2))
-let ( ) = assert(10 = -mylist_get_at(xs7)(4))
-let ( ) = assert(10 = -mylist_get_at(xs7)(6))
-;;
-
-(* ****** ****** *)
-let () = print_string("Assign2-2-test passed!\n");;
