@@ -17,8 +17,9 @@ from MyPython import *
 def fnlist_make_fwork(fwork):
   res = fnlist_nil() # initialize list empty
   # define work function to add list element to list
-  def work(x0):
+  def work(x0, res):
     res = fnlist_cons(x0, res)
-  fwork(work) #call work
+    # return res # return or not??
+  res = fwork(work, res) #call work // not sure if u reassign or not
   res = fnlist_reverse(res) #reverse list because work adds to front
   return res
