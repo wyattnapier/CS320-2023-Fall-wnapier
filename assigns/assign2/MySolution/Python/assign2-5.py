@@ -14,6 +14,13 @@ import sys
 sys.path.append("./../../../../classlib/Python/")
 from MyPython import *
 
-def fnlist_make_fwork(fwork):
-  print("I like camels")
-  return fnlist_nil(fnlist)
+def fnlist_make_fwork(fwork()):
+  res = fnlist_nil()
+
+  def work(x0):
+    res = fnlist_cons(x0, res)
+    
+  fwork(work)
+
+  res = fnlist_reverse(res)
+  return res
