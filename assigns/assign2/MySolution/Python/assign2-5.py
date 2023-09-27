@@ -13,8 +13,7 @@
 import sys 
 sys.path.append("./../../../../classlib/Python/")
 from MyPython import *
-sys.path.append("./../../")
-from assign2 import *
 
 def fnlist_make_fwork(fwork):
   print("I like camels")
+  return fnlist_nil(fnlist)
