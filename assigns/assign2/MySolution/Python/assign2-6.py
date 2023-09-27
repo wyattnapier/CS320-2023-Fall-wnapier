@@ -9,3 +9,6 @@ sys.path.append("./../../../../classlib/Python/")
 from MyPython import *
 sys.path.append("./../../")
 from assign2.py import *
+
+def string_merge():
+  print("One string looks like this")

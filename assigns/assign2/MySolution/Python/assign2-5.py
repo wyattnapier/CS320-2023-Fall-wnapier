@@ -4,9 +4,17 @@
 # to the function list_make_fwork in the library
 # MyOCaml.ml
 
+# let list_make_fwork(fwork: ('x0 -> unit) -> unit): 'x0 list =
+#   let res = ref([]) in
+#     let work(x0) = (res := (x0 :: !res))
+#     in(*let*)(fwork(work); list_reverse(!res) )
+# ;;
+
 import sys 
 sys.path.append("./../../../../classlib/Python/")
 from MyPython import *
 sys.path.append("./../../")
-from assign2.py import *
+from assign2 import *
 
+def fnlist_make_fwork(fwork):
+  print("I like camels")
