@@ -19,8 +19,7 @@ def fnlist_make_fwork(fwork):
   # define work function to add list element to list
   def work(x0):
     nonlocal res # get scope of outer res
-    return fnlist_cons(x0, res)
+    res = fnlist_cons(x0, res)
     # return res # return or not??
-  res = fwork(work) #call work // not sure if u reassign or not
-  res = fnlist_reverse(res) #reverse list because work adds to front
-  return res
+  fwork(work) #call work // not sure if u reassign or not
+  return fnlist_reverse(res) #reverse list because work adds to front
