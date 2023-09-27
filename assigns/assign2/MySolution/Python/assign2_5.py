@@ -14,13 +14,11 @@ import sys
 sys.path.append("./../../../../classlib/Python/")
 from MyPython import *
 
-def fnlist_make_fwork(fwork()):
-  res = fnlist_nil()
-
+def fnlist_make_fwork(fwork):
+  res = fnlist_nil() # initialize list empty
+  # define work function to add list element to list
   def work(x0):
     res = fnlist_cons(x0, res)
-    
-  fwork(work)
-
-  res = fnlist_reverse(res)
+  fwork(work) #call work
+  res = fnlist_reverse(res) #reverse list because work adds to front
   return res
