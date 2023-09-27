@@ -73,10 +73,10 @@ def string_merge(str1, str2):
           # return string_make(c2, foreach(i1, i2 + 1, work))
           return fnlist_make_fwork(lambda work: work(c2), foreach(i1, i2+1, fnlist_make_fwork)))
       else:
-        return int1_foreach(n1-i1, work) #figure out work function
+        return int1_foreach(n1-i1, lambda work: work(string_get_at(str1, i1))) #figure out work function
         # simply append the rest of str1
     else:
-      return int1_foreach(n2-i2, work) #figure out work function
+      return int1_foreach(n2-i2, lambda work: work(string_get_at(str2, i2))) #figure out work function
 
   out = foreach(str1, str2, fnlist_make_fwork)
   return fnlist_reverse(out) # might need to just print string instead?
