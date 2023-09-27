@@ -40,43 +40,48 @@ from MyPython import *
 sys.path.append("./../../")
 from assign2.py import *
 
-def string_length(str):
-  return len(str)
+def string_length(s):
+    return len(s)
 
-def string_get_at(str, index):
-  str[index]
+def string_get_at(s, index):
+    return s[index]
 
 def fnlist_make_fwork(fwork):
-  res = fnlist_nil() # initialize list empty
-  # define work function to add list element to list
-  def work(x0):
-    nonlocal res # get scope of outer res
-    res = fnlist_cons(x0, res)
-    # return res # return or not??
-  fwork(work) #call work // not sure if u reassign or not
-  return fnlist_reverse(res) #reverse list because work adds to front // might not need to rev now because we rev at end
+    res = fnlist_nil()
 
-# def work(): # might need to implement this?
+    def work(x0):
+        nonlocal res
+        res = fnlist_cons(x0, res)
 
-def string_merge(str1, str2):
-  n1 = len(str1)
-  n2 = len(str2)
+    fwork(work)
+    return fnlist_reverse(res)
 
-  def foreach(i1, i2, work):
-    if(i1 < n1): 
-      if (i2 < n2):
-        c1 = string_get_at(str1, i1)
-        c2 = string_get_at(str2, i2)
-        if c1 <= c2: #do work yessir
-          return fnlist_make_fwork(lambda work: work(c1), foreach(i1+1, i2, fnlist_make_fwork)))
-        else: 
-          # return string_make(c2, foreach(i1, i2 + 1, work))
-          return fnlist_make_fwork(lambda work: work(c2), foreach(i1, i2+1, fnlist_make_fwork)))
-      else:
-        return int1_foreach(n1-i1, lambda work: work(string_get_at(str1, i1))) #figure out work function
-        # simply append the rest of str1
-    else:
-      return int1_foreach(n2-i2, lambda work: work(string_get_at(str2, i2))) #figure out work function
+def string_merge(cs1, cs2):
+    n1 = string_length(cs1)
+    n2 = string_length(cs2)
 
-  out = foreach(str1, str2, fnlist_make_fwork)
-  return fnlist_reverse(out) # might need to just print string instead?
+    def foreach(i1, i2, work):
+        if i1 < n1:
+            if i2 < n2:
+                c1 = string_get_at(cs1, i1)
+                c2 = string_get_at(cs2, i2)
+                if c1 <= c2:
+                    work(c1)
+                    return foreach(i1 + 1, i2, work)
+                else:
+                    work(c2)
+                    return foreach(i1, i2 + 1, work)
+            else:
+                int1_foreach(n1 - i1, work)
+        else:
+            int1_foreach(n2 - i2, work)
+
+    def work(x0):
+        nonlocal result
+        result = fnlist_cons(x0, result)
+
+    result = fnlist_nil()
+    foreach(0, 0, work)
+    result = fnlist_reverse(result)
+
+    return string_make_fwork(result)  # Convert the result to a string
