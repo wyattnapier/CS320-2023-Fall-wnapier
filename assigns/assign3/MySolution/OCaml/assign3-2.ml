@@ -35,7 +35,6 @@ match xs with
 ;;
 
 let list_subsets (xs: 'a list): 'a list list =
-  let res = [] in
-  list_map (xs) (list_append(res)(list_foldright(xs)([[]])(fun x res -> some func)))
+  list_foldright(xs)([[]])(fun x res -> 
+    list_append(res)(list_map(res)(fun xs -> x :: xs)))
 ;;
-  (* foldright append map *)l

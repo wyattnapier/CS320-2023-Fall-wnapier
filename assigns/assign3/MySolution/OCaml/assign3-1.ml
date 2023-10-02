@@ -53,22 +53,33 @@ list_make_fwork
 (fun work -> list_foreach(xs)(fun x -> work(fopr(x))))
 ;;
 
-(* let rec
-matrix_transpose(xss: 'a list list): 'a list list =
-  match xss with
-  | [] -> []
-  | h::t -> list_zip2 h (helper t)
-and helper(reptile: 'a list list): 'a list =
-  match reptile with
-  | [] -> []
-  | h::[] -> h
-  | h::t -> matrix_transpose(t) *)
-
 (* ************** *)
-let helper(res: 'a list list) (xs: 'a list): 'a list list =
-  xs :: res
+
+let rec grab_head(xs: 'a list list): 'a list =
+    match xs with
+    | [] -> []  (* raise done this thing is empty *)
+    | [] :: _ -> []
+    | (x :: _) :: xs1 -> x :: grab_head xs1 (* xs1 is the other rows *)
+  
+
+let rec grab_tail(xs: 'a list list): 'a list list =
+  match xs with
+  | [] -> [] (* raise done this thing is empty *)
+  | [] :: xs1 -> grab_tail(xs1)
+  | (_ :: xs) :: xs1 -> xs :: grab_tail(xs1)
 
 let rec matrix_transpose(xss: 'a list list): 'a list list =
+  match xss with
+  | [[]] -> [[]]
+  | [] :: _ -> []
+  | _ ->  
+    let heads = grab_head(xss) in 
+    let tails = grab_tail(xss) in
+    heads :: matrix_transpose(tails) 
+    
+
+(* ************** *)
+
   (* 
   (* is this backwards?? *)
   for_each(
@@ -79,7 +90,7 @@ let rec matrix_transpose(xss: 'a list list): 'a list list =
         )
       ))) *)
 
-  list_map(xss)(list_append(list_foldright)))
+  (* list_map(xss)(list_append(list_foldright))) *)
 (*
 THINKING SPACE:
 
