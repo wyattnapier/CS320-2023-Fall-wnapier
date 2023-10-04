@@ -23,13 +23,7 @@ and [2;1] are DIFFERENT.
    make a length function for the x0 then put it in fold left else don't put it in fold left
 *)
 
-let rec
-list_map
-(xs: 'a list)(fopr: 'a -> 'b): 'b list =
-match xs with
-| [] -> []
-| x1 :: xs -> fopr(x1) :: list_map(xs)(fopr)
-;;
+let list_map = fun xs -> foreach_to_map_list(list_foreach)(xs);;
 
 let list_subsets (xs: 'a list): 'a list list =
   list_foldright(xs)([[]])(fun x res -> 

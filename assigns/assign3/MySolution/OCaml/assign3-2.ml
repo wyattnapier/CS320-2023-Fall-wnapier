@@ -26,13 +26,7 @@ of a set is insignificant. For instance, [1,2] and
 //
 *)
 
-let rec
-list_map
-(xs: 'a list)(fopr: 'a -> 'b): 'b list =
-match xs with
-| [] -> []
-| x1 :: xs -> fopr(x1) :: list_map(xs)(fopr)
-;;
+let list_map = fun xs -> foreach_to_map_list(list_foreach)(xs);;
 
 let list_subsets (xs: 'a list): 'a list list =
   list_foldright(xs)([[]])(fun x res -> 
