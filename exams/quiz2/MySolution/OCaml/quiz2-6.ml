@@ -9,5 +9,10 @@ Please give an implementation of list_reverse based on list_foldright
 *)
 
 (* ************************************************ *)
-
-let list_reverse(xs: 'a list): 'a list = ....
+#use "./../../MySolution/OCaml/assign3-1.ml";;
+let list_reverse(xs: 'a list): 'a list = 
+list_foldright(xs)([])(fun xs acc ->
+    match xs with
+    |[] -> []
+    |x1 :: xs1 -> xs :: acc
+  )

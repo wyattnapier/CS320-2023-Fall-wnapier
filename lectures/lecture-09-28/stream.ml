@@ -49,21 +49,17 @@ let rec
 sieve
 (fxs: int stream): int stream = fun() ->
 match fxs() with
-|
-StrNil -> failwith "whatever!!!"
-|
-StrCons(p1, fxs) ->
-let rec
-filter(fxs) = fun() ->
-match fxs() with
-|
-StrNil -> failwith "whatever!!!"
-|
-StrCons(x1, fxs) ->
-if x1 mod p1 = 0
-then filter(fxs)()
-else StrCons(x1, filter(fxs))
-in
+|StrNil -> failwith "whatever!!!"
+|StrCons(p1, fxs) ->
+  let rec
+  filter(fxs) = fun() ->
+    match fxs() with
+    |StrNil -> failwith "whatever!!!"
+    |StrCons(x1, fxs) ->
+      if x1 mod p1 = 0
+      then filter(fxs)()
+      else StrCons(x1, filter(fxs))
+    in  
   StrCons(p1, sieve(filter(fxs)))
 
 let thePrimes = sieve(stream_from(2))

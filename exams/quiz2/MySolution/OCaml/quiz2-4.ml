@@ -9,6 +9,15 @@ is empty, raise the Empty exception
 *)
 
 (* ************************************************ *)
+#use "./../../MySolution/OCaml/assign3-1.ml";;
+
 
 exception Empty
-let list_last(xs: 'a list): 'a = ....
+let list_last(xs: 'a list): 'a = 
+  list_foldleft(xs)(None)(fun acc xs ->
+    match xs with
+    |[] -> raise Empty
+    |x1::xs1 -> match xs1 with
+      |[] -> Some acc = x1
+      | _ -> match acc with None | Some acc
+    )

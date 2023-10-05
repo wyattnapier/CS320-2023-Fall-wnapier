@@ -20,4 +20,10 @@
 # *)
 
 def foreach_to_get_at(foreach): # your implementation below
-
+  i = 0
+  for x in xs:
+    if i==index:
+      return x
+    else:
+      i += 1
+  raise IndexError

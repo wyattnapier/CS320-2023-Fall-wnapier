@@ -16,5 +16,14 @@ match xs with
 *)
 
 (* ************************************************ *)
-
-let list_append(xs: 'a list): 'a list = ....
+#use "./../../MySolution/OCaml/assign3-1.ml";;
+let list_append(xs: 'a list)(ys: 'a list): 'a list =
+list_foldleft(xs1)([])(fun xs1 acc1 ->
+    match xs1 with
+    |x1::xs1 -> acc1 :: xs1
+    |[] -> list_foldleft(xs2)([])(fun xs2 acc2 ->
+      match xs2 with
+      |[] -> acc1
+      |x2::xs2 -> acc1::x2
+      )
+  )
