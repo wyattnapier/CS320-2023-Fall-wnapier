@@ -16,7 +16,7 @@ let theNatPairs: (int*int) stream = fun () -> ...
 *)
 
 let theNatPairs: (int*int) stream = fun () -> 
-  let rec pairHelper(i: int)(j: int) = fun () ->
+  let rec pairHelper(i: int)(j: int) = 
     if j = i + j then pairHelper(i + j + 1)(0)
     else pairHelper(i - 1)(j + 1)
   in pairHelper(0)(0)
