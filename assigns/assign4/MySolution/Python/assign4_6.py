@@ -60,7 +60,7 @@ def stream_merge2(fxs1, fxs2, lte3):
 def generator_of_streaam(fxs):
   while True:
     cxs = fxs()
-    if cxss.ctag ==0:
+    if cxs.ctag ==0:
       break
     else:
       fxs = cxs.cons2

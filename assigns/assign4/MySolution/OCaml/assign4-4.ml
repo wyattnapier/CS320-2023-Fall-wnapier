@@ -33,9 +33,16 @@ let list_length(xs: 'a list): int =
 let list_get_at(xs: 'a list)(index: int): 'a =
   list_make_fwork(fun work ->
     (int1_foreach)(list_length(xs)) (fun j ->
-      
+      if()
     )
   )
+
+(*
+if you take out the first element then you have all the permutations of the rest of it
+then you want to uhhhhhh
+use stream aappend to "shcedule" work to be done later when you actually do the evaluation   
+
+*)
 
 (* let list_copy_swap
 let list_reverse_subset_from_index *)
