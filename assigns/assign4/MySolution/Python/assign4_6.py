@@ -87,7 +87,7 @@ def cube_sum(ij):
   j = ij[1]
   return i*i*i + j*j*j
 
-def cub_sum_lte(ij1, ij2):
+def cube_sum_lte(ij1, ij2):
   return (cube_sum(ij1) <= cube_sum(ij2))
 
 def strcon_merge2(cxs1, cxs2, lte3):
@@ -113,5 +113,5 @@ def generator_of_stream(fxs):
 
 def theNatPairs_cubesum():
   def helper(i0):
-    return strcons_cons((i0, i0), stream_merge2(stream_tabulate(-1, lambda j0: (i0, i0+1+j0)), lambda: helper(i0+1), cube_sum_lte))
+    return strcon_cons((i0, i0), stream_merge2(stream_tabulate(-1, lambda j0: (i0, i0+1+j0)), lambda: helper(i0+1), cube_sum_lte))
   return generator_of_stream(lambda: helper(0))
