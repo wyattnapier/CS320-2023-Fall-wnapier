@@ -57,10 +57,10 @@ def strcon_merge2(cxs1, cxs2, lte3):
 def stream_merge2(fxs1, fxs2, lte3):
   return lambda: strcon_merge2(fxs1(), fxs2(), lte3)
 
-def generator_of_streaam(fxs):
+def generator_of_stream(fxs):
   while True:
     cxs = fxs()
-    if cxs.ctag ==0:
+    if cxs.ctag == 0:
       break
     else:
       fxs = cxs.cons2

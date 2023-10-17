@@ -48,7 +48,7 @@ match nxs with
 let fchildren (x0: 'a gtree): 'a gtree list =
 match x0 with
 | GTnil -> [] | GTcons(_, xs) -> xs
-
+(***************************************)
 let rec helper(stream) = fun () ->
   match stream() with
   | StrNil -> StrNil
