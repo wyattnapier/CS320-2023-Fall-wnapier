@@ -58,3 +58,14 @@ list_length(xs) =
 ## Continuation
 
 ## Generators (LINEAR streams)
+
+
+
+(* ******** ********** *)
+(* 
+let sum l = 
+  let rec sumHelper l k = 
+    match l with
+    |[] -> 0
+    |x1::xs -> sumHelper xs (fun r -> k (r+x1))
+  in sumHelper l (fun r -> r) *)
