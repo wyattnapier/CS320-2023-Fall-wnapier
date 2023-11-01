@@ -4,18 +4,7 @@
 let rec kf91 x k =
   if x > 100 then k(x - 10) (* put it inside k because that is the operation you're doing *)
     else kf91(x + 11) (fun res -> kf91(res)(k)) (* call inside lambda function maps to outer call *)
-;;
-let f91 n =
-  let rec f91_tail_recursive n k =
-    if n > 100 then
-      n - 10
-    else if k=true then
-      f91_tail_recursive (n + 11) (false)
-    else
-      f91_tail_recursive (n) (true)
-  in
-  f91_tail_recursive n true  (* Initialize k with 1 when calling the helper function *)
-;;
+  ;;
 (* Example usage: *)
 let result = f91 97  (* Call f91 with an initial value of 97 *)
 (* ************************************ *)
