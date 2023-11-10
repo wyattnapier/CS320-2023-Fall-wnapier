@@ -48,6 +48,9 @@ let rec trim cs =
 
 *)
 
+(* discussion answer *)
+
+
 (*auxiliary functions*)
 
 let explode (s: string) : char list = 
