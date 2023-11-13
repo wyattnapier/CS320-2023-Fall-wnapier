@@ -53,24 +53,50 @@ Grammar (<expr> is the start symbol)
 *)
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-type sexpr =
+(* type sexpr =
   | SInt of int        (* 1, 2, 3, 4 ...  *)
   | SAdd of sexpr list (* (add e1 e2 ...) *)
   | SMul of sexpr list (* (mul e1 e2 ...) *)
 
-(* let rec parser_expr *)
 let rec digit () = 
   let* x = natural in 
-    (if (0<=x) && (x<=9) then pure (SInt x) else fail)
-;;
+    (if (0<=x) then pure (SInt x) << whitespaces else fail)
+;; *)
 
-let rec num () = 
-  
+(* let rec parse_digit e = 
+  let* y = digit() in
+  let* _ = whitespaces in
+  pure (SAdd y)
+  <|> digit() *)
 
-let parse_expr e =
-  string_parse (digit ()) e
-
+(* let parse_expr e =
+  string_parse (digit ()) e *)
 
 (* ****** ****** *)
+
+let rec parse_expr () : sexpr parser =
+  parse_int () <|> parse_add () <|> parse_mul ()
+
+and parse_int () : sexpr parser =
+  let* n = natural in
+  pure (SInt n) << whitespaces
+
+and parse_add () : sexpr parser =
+  let* _ = keyword "(add" in
+  let* es = many1' parse_expr in
+  let* _ = keyword ")" in
+  pure (SAdd es)
+
+and parse_mul () : sexpr parser =
+  let* _ = keyword "(mul" in
+  let* es = many1' parse_expr in
+  let* _ = keyword ")" in
+  pure (SMul es)
+
+let parse (s : string) : sexpr option =
+  match string_parse (parse_expr ()) s with
+  | Some (e, []) -> Some e
+  | _ -> None
+
 
 (* end of [CS320-2023-Fall-assigns-assign6.ml] *)
