@@ -53,7 +53,7 @@ Grammar (<expr> is the start symbol)
 *)
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-(* type sexpr =
+type sexpr =
   | SInt of int        (* 1, 2, 3, 4 ...  *)
   | SAdd of sexpr list (* (add e1 e2 ...) *)
   | SMul of sexpr list (* (mul e1 e2 ...) *)
@@ -61,7 +61,7 @@ Grammar (<expr> is the start symbol)
 let rec digit () = 
   let* x = natural in 
     (if (0<=x) then pure (SInt x) << whitespaces else fail)
-;; *)
+;;
 
 (* let rec parse_digit e = 
   let* y = digit() in
@@ -93,10 +93,16 @@ and parse_mul () : sexpr parser =
   let* _ = keyword ")" in
   pure (SMul es)
 
-let parse (s : string) : sexpr option =
+let sexpr_parse (s : string) : sexpr option =
   match string_parse (parse_expr ()) s with
   | Some (e, []) -> Some e
   | _ -> None
 
+let rec sexpr_to_string (sexpr: sexpr): string =
+  match sexpr with
+  | SInt n -> string_of_int n
+  | SAdd exprs -> "(add " ^ String.concat " " (List.map sexpr_to_string exprs) ^ ")"
+  | SMul exprs -> "(mul " ^ String.concat " " (List.map sexpr_to_string exprs) ^ ")"
+;;
 
 (* end of [CS320-2023-Fall-assigns-assign6.ml] *)
