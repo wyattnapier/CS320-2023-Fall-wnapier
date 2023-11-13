@@ -58,51 +58,52 @@ type sexpr =
   | SAdd of sexpr list (* (add e1 e2 ...) *)
   | SMul of sexpr list (* (mul e1 e2 ...) *)
 
-let rec digit () = 
+(* calls different parsers but only returns the sexpr that is successful *)
+let rec parse_expr () : sexpr parser =
+  parse_int () <|> parse_add () <|> parse_mul () (* disjoint returns the first successful parser *)
+
+(* turns digits into an actual integer value using natural function then removes following whitespace *)
+and parse_int () : sexpr parser =
   let* x = natural in 
     (if (0<=x) then pure (SInt x) << whitespaces else fail)
-;;
 
-(* let rec parse_digit e = 
-  let* y = digit() in
-  let* _ = whitespaces in
-  pure (SAdd y)
-  <|> digit() *)
-
-(* let parse_expr e =
-  string_parse (digit ()) e *)
-
-(* ****** ****** *)
-
-let rec parse_expr () : sexpr parser =
-  parse_int () <|> parse_add () <|> parse_mul ()
-
-and parse_int () : sexpr parser =
-  let* n = natural in
-  pure (SInt n) << whitespaces
-
+(* isolate keyword then parse arguments and then close parens and set type to SAdd *)
 and parse_add () : sexpr parser =
   let* _ = keyword "(add" in
   let* es = many1' parse_expr in
   let* _ = keyword ")" in
   pure (SAdd es)
 
+(* isolate keyword then parse arguments and then close parens and set type to SMul *)
 and parse_mul () : sexpr parser =
   let* _ = keyword "(mul" in
   let* es = many1' parse_expr in
   let* _ = keyword ")" in
   pure (SMul es)
 
+(* initial call to start parse - returns what is passed back from parse_expr without the useless info filtered into second list *)
 let sexpr_parse (s : string) : sexpr option =
   match string_parse (parse_expr ()) s with
   | Some (e, []) -> Some e
   | _ -> None
 
-let rec sexpr_to_string (sexpr: sexpr): string =
-  match sexpr with
-  | SInt n -> string_of_int n
-  | SAdd exprs -> "(add " ^ String.concat " " (List.map sexpr_to_string exprs) ^ ")"
-  | SMul exprs -> "(mul " ^ String.concat " " (List.map sexpr_to_string exprs) ^ ")"
-;;
+(* like list map but for sexpr - appends the result of map to list *)
+let rec sexpr_map
+(xs: sexpr list)(fopr: sexpr -> 'b): 'b list =
+  match xs with
+  | [] -> []
+  | x1 :: xs -> fopr x1 :: sexpr_map xs fopr
 
+let rec string_concat strictString strings =
+  match strings with
+  | [] -> ""
+  | [s] -> s
+  | s :: rest -> string_append s (string_append (strictString) (string_concat strictString rest))
+
+(* matches the type of sexpr and then recursively builds the string *)
+let rec sexpr_to_string s = 
+  match s with
+  | SInt n -> string_of_int n
+  | SAdd exprs -> string_append ("(add ") ((string_append (string_concat " " (sexpr_map exprs sexpr_to_string)) ")"))
+  | SMul exprs -> string_append ("(mul ") ((string_append (string_concat " " (sexpr_map exprs sexpr_to_string)) ")"))
 (* end of [CS320-2023-Fall-assigns-assign6.ml] *)
