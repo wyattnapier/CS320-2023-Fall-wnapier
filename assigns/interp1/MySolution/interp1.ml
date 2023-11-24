@@ -45,6 +45,7 @@ type coms = com list
 (* ******** ********* *)
 
 (* parse constants - mutually recursive because it simplifies it a bit in my mind *)
+(* change return parser type to a specific const type e.g. (int, bool and unit)*)
 let rec parse_const(): const parser = 
    parse_int() <|> parse_bool() <|> parse_unit ()
 
@@ -54,44 +55,69 @@ and parse_int () : const parser =
    (* do you have to clear the ;\n after? *)
 
 and parse_bool () : const parser =
-   let* _ = keyword "True;\n" in pure (Bool true)
-   <|> let* _ = keyword "False;\n" in pure (Bool false)
+   let* _ = keyword "True" in pure (Bool true)
+   <|> let* _ = keyword "False" in pure (Bool false)
    <|> fail
 
-(* use binding to parse unit as well - what is a unit though?? *)
 and parse_unit () : const parser = 
    let* _ = keyword "Unit" in pure Unit <|> fail
 
 (* *********** ********** *)
 
-
 let rec parse_com(): com parser =
-   (* parse_push() <|> parse_pop () <|> parse_trace () <|> *)
-   parse_and ()(* <|> parse_or () <|> parse_not () <|> *)
-   (* parse_lt () <|> parse_gt *)
+   parse_push() <|> parse_pop () <|> parse_trace () <|>
+   parse_and () <|> parse_or () <|> parse_not () <|>
+   parse_lt () <|> parse_gt()
 
-(*
 and parse_push(): com parser = 
    let* _ = keyword "Push" in
-   let* x = many1' parse_const in
-   let* _ = keyword ";\n" in
-   pure(Parse x) (* maybe just parse push first and then parse const after that *)
-*)
+   (* let* _ = whitespaces in *)
+   let* c = parse_const() in
+   (* let* _ = keyword ";\n" in *)
+   pure (Push (Int 1))
+
+and parse_pop (): com parser = 
+   let* _ = keyword "Pop" in
+   pure (Pop)
+
+and parse_trace (): com parser = 
+   let* _ = keyword "Trace" in
+   pure (Trace)
 
 and parse_and (): com parser = 
-   let* _ = keyword "And;\n" in
-   let _ = parse_coms in
+   let* _ = keyword "And" in
    pure (And)
 
-let rec parse_coms(): coms parser = 
-   many parse_com ()
+and parse_or (): com parser = 
+   let* _ = keyword "Or" in
+   pure (Or)
 
-(* stringize *)
-Exception NoCom
-let com_stringize (c: com) : string = 
-   match c with
-   | Push (Int x) -> "Push int"
-   | Push (Bool x) -> "Push bool"
+and parse_not (): com parser = 
+   let* _ = keyword "Not" in
+   pure (Not)
+
+and parse_lt (): com parser = 
+   let* _ = keyword "Lt" in
+   pure (Lt)
+
+and parse_gt (): com parser = 
+   let* _ = keyword "Gt" in
+   pure (Gt)
+
+let rec parse_coms(): coms parser = 
+   many' parse_com  (* allows empty string I think? *)
+
+(* 
+pattern match on the type - do this before converting to a string
+   pattern match and evaluate????????????????????
+stringize  - option map this onto output from the match in interp
+*)
+(* exception NoCom
+let com_stringize e : string = (* figure out input typing and pattern matching *)
+   (* could make function instead of match *)
+   match e with
+   (* | Push (Int x) -> "Push int" ^ string_of_int x
+   | Push (Bool x) -> "Push bool" ^ string_of_bool x *)
    | Pop -> "Pop"
    | Trace -> "Trace"
    | And -> "And"
@@ -99,34 +125,15 @@ let com_stringize (c: com) : string =
    | Not -> "Not"
    | Lt -> "Lt"
    | Gt -> "Gt"
-   | _ -> raise NoCom
+   | _ -> raise NoCom *)
 
-(* ****** to string section ****** *)
-(*
-(* like list map but for sexpr - appends the result of map to list *)
-let rec sexpr_map
-(xs: sexpr list)(fopr: sexpr -> 'b): 'b list =
-  match xs with
-  | [] -> []
-  | x1 :: xs -> fopr x1 :: sexpr_map xs fopr
-
-let rec string_concat strictString strings =
-  match strings with
-  | [] -> ""
-  | [s] -> s
-  | s :: rest -> string_append s (string_append (strictString) (string_concat strictString rest))
-
-(* matches the type of sexpr and then recursively builds the string *)
-let rec sexpr_to_string s = 
-  match s with
-  | SInt n -> string_of_int n
-  | SAdd exprs -> string_append ("(add ") ((string_append (string_concat " " (sexpr_map exprs sexpr_to_string)) ")"))
-  | SMul exprs -> string_append ("(mul ") ((string_append (string_concat " " (sexpr_map exprs sexpr_to_string)) ")"))
-  *)
 (* **************************** ************************  *)
 
 (* starting function to begin parsing // need to convert to string list *)
-let interp (s : string) : string list option = (* YOUR CODE *)
-   match string_parse (parse_coms ()) s with
-   | Some (e, []) -> Some e
-   | _ -> None
+(* let interp (s : string) : string list option = (* YOUR CODE *)
+   string_parse (parse_coms ()) s  *)
+
+
+   (* match string_parse (parse_coms ()) s with
+   | Some (e, []) -> Some e (* map and stringize e *)
+   | _ -> None *)
