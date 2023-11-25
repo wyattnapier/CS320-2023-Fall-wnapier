@@ -46,21 +46,19 @@ type coms = com list
 
 (* parse constants - mutually recursive because it simplifies it a bit in my mind *)
 (* change return parser type to a specific const type e.g. (int, bool and unit)*)
-let rec parse_const(): const parser = 
-   parse_int() <|> parse_bool() <|> parse_unit ()
 
-and parse_int () : const parser =
-   let* _ = char '-' in let* x = natural in pure (Int (-x)) 
-   <|> let* x = natural in pure (Int x)
-   (* do you have to clear the ;\n after? *)
-
-and parse_bool () : const parser =
-   let* _ = keyword "True" in pure (Bool true)
-   <|> let* _ = keyword "False" in pure (Bool false)
+let parse_int : int parser =
+   (let* _ = char '-' in let* x = natural in pure (-x))
+   <|> (let* x = natural in pure x)
+let parse_bool : bool parser =
+   let* _ = keyword "True" in pure (true)
+   <|> let* _ = keyword "False" in pure (false)
    <|> fail
-
-and parse_unit () : const parser = 
-   let* _ = keyword "Unit" in pure Unit <|> fail
+let parse_unit: unit parser = 
+   let* _ = keyword "Unit" in pure () <|> fail
+let parse_const : const parser = 
+   (parse_int >>= fun i -> pure(Int i)) <|> (parse_bool >>= fun b -> pure(Bool b)) 
+   <|> (parse_unit >>= fun u -> pure (Unit))
 
 (* *********** ********** *)
 
@@ -71,10 +69,8 @@ let rec parse_com(): com parser =
 
 and parse_push(): com parser = 
    let* _ = keyword "Push" in
-   (* let* _ = whitespaces in *)
-   let* c = parse_const() in
-   (* let* _ = keyword ";\n" in *)
-   pure (Push (Int 1))
+   let* c = parse_const in
+   pure (Push c)
 
 and parse_pop (): com parser = 
    let* _ = keyword "Pop" in
@@ -105,7 +101,7 @@ and parse_gt (): com parser =
    pure (Gt)
 
 let rec parse_coms(): coms parser = 
-   many' parse_com  (* allows empty string I think? *)
+   many (parse_com () << keyword ";")  (* allows empty string I think? *)
 
 (* 
 pattern match on the type - do this before converting to a string
