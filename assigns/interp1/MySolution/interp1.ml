@@ -64,7 +64,7 @@ let parse_unit: unit parser =
    let* _ = keyword "Unit" in pure () <|> fail
 let parse_const : const parser = 
    (parse_int >>= fun i -> pure(Int i)) <|> (parse_bool >>= fun b -> pure(Bool b)) 
-   <|> (parse_unit >>= fun u -> pure (Unit))
+   <|> (parse_unit >>= fun u -> pure (Unit)) <|> fail
 
 (* *********** ********** *)
 
@@ -72,7 +72,8 @@ let rec parse_com(): com parser =
    parse_push() <|> parse_pop () <|> parse_trace () <|>
    parse_add () <|> parse_sub () <|> parse_mul() <|> parse_div () <|>
    parse_and () <|> parse_or () <|> parse_not () <|>
-   parse_lt () <|> parse_gt() (* <|> parse_empty () *)
+   parse_lt () <|> parse_gt() 
+   (* <|> parse_empty () *)
 
 and parse_push(): com parser = 
    let* _ = keyword "Push" in
@@ -135,36 +136,6 @@ let rec parse_coms(): coms parser =
 
 (* ******** end parser, begin match ********* *)
 
-(* could make function instead of match *)
-(* begin: chat suggesiton for printing it *)
-(* let rec match_coms_example : coms -> unit = function
-  | [] -> ()  (* handle the case when the list is empty *)
-  | com :: rest ->
-    match com with
-    | Push c -> (* pattern match on the Push constructor and handle the const value c *)
-      begin
-        match c with
-        | Int x -> Printf.printf "Push Int: %d\n" x
-        | Bool b -> Printf.printf "Push Bool: %b\n" b
-        | Unit -> Printf.printf "Push Unit\n"
-      end
-    | Pop -> Printf.printf "Pop\n"
-    | Trace -> Printf.printf "Trace\n"
-    | And -> Printf.printf "And\n"
-    | Or -> Printf.printf "Or\n"
-    | Not -> Printf.printf "Not\n"
-    | Lt -> Printf.printf "Lt\n"
-    | Gt -> Printf.printf "Gt\n";
-
-    match_coms rest *)  (* recursively call match_coms on the rest of the list *)
-   (* end: chat suggesiton for printing it *)
-
-   (* make a global stack list that you can prepend to and grab from *)
-   (* make a global trace string list which lists commands that have been executed thus far *)
-   (* let S = [];;
-   let T = [];; *)
-
-(* for the trace function *)
 let toString (c: const): string =
    match c with
    | Int c -> int2str c (* from assign0-3 *)
@@ -174,7 +145,8 @@ let toString (c: const): string =
 
 let rec match_coms (s: const list) (t: string list) (p:coms): string list = 
    match p with
-   | [] -> "end of program ":: t (* handles the empty string - but invalid inputs that parse as None match here too hmmmm *)
+   (* | [] -> "end of program ":: t (* handles the empty string - but invalid inputs that parse as None match here too hmmmm *) *)
+   | [] -> t
    | com :: rest ->
       match com with
       | Push c -> (* pattern match on the Push constructor and handle the const value c *)
@@ -187,77 +159,88 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
       | Pop ->
          begin
             match s with
-            | [] -> "pop from empty stack" :: t
+            (* | [] -> "pop from empty stack" :: t *)
             | c1 :: cs -> match_coms (cs) (t) (rest)
+            | _ -> "Panic" :: t
          end
       | Trace ->
          begin
             match s with
-            | [] -> "trace from empty stack" :: t
+            (* | [] -> "trace from empty stack" :: t *)
             | c1 :: cs -> match_coms (Unit :: cs) (toString(c1):: t) (rest)
+            | _ -> "Panic" :: t
          end
       | Add ->
          begin
             match s with
-            | _ :: [] -> "add from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "add from insufficient stack" :: t (* can lump in with other case later *) *)
             | Int i :: Int j :: cs -> match_coms (Int(i + j) :: cs) (t) (rest)
-            | _ -> "add with wrong types" :: t
+            (* | _ -> "add with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Sub ->
          begin
             match s with
-            | _ :: [] -> "sub from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "sub from insufficient stack" :: t (* can lump in with other case later *) *)
             | Int i :: Int j :: cs -> match_coms (Int(i - j) :: cs) (t) (rest)
-            | _ -> "sub with wrong types" :: t
+            (* | _ -> "sub with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Mul ->
          begin
             match s with
-            | _ :: [] -> "mul from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "mul from insufficient stack" :: t (* can lump in with other case later *) *)
             | Int i :: Int j :: cs -> match_coms (Int(i * j) :: cs) (t) (rest)
-            | _ -> "mul with wrong types" :: t
+            (* | _ -> "mul with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Div ->
          begin
             match s with
-            | _ :: [] -> "div from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "div from insufficient stack" :: t (* can lump in with other case later *) *)
             | Int i :: Int j :: cs -> if j != 0 then match_coms (Int(i * j) :: cs) (t) (rest) else "div by 0" :: t
-            | _ -> "div with wrong types" :: t
+            (* | _ -> "div with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | And ->
          begin
             match s with
-            | _ :: [] -> "and from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "and from insufficient stack" :: t (* can lump in with other case later *) *)
             | Bool a :: Bool b :: cs -> match_coms (Bool(a && b) :: cs) (t) (rest)
-            | _ -> "and with wrong types" :: t
+            (* | _ -> "and with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Or ->
          begin
             match s with
-            | _ :: [] -> "or from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "or from insufficient stack" :: t (* can lump in with other case later *) *)
             | Bool a :: Bool b :: cs -> match_coms (Bool(a || b) :: cs) (t) (rest)
-            | _ -> "or with wrong types" :: t
+            (* | _ -> "or with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Not ->
          begin
             match s with
-            | [] -> "not from insufficient stack" :: t (* can lump in with other case later *)
+            (* | [] -> "not from insufficient stack" :: t (* can lump in with other case later *) *)
             | Bool a :: cs -> match_coms (Bool(not a) :: cs) (t) (rest)
-            | _ -> "not with wrong types" :: t
+            (* | _ -> "not with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Lt ->
          begin
             match s with
-            | _ :: [] -> "lt from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "lt from insufficient stack" :: t (* can lump in with other case later *)  *)
             | Int i :: Int j :: cs -> match_coms (Bool(i < j) :: cs) (t) (rest)
-            | _ -> "lt with wrong types" :: t
+            (* | _ -> "lt with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
       | Gt ->
          begin
             match s with
-            | _ :: [] -> "gt from insufficient stack" :: t (* can lump in with other case later *)
+            (* | _ :: [] -> "gt from insufficient stack" :: t (* can lump in with other case later *)  *)
             | Int i :: Int j :: cs -> match_coms (Bool(i > j) :: cs) (t) (rest)
-            | _ -> "gt with wrong types" :: t
+            (* | _ -> "gt with wrong types" :: t *)
+            | _ -> "Panic" :: t
          end
 
 (* **************************** ************************  *)
@@ -268,3 +251,5 @@ let interp (s : string) : string list option = (* YOUR CODE *)
    | Some (coms, _) -> Some(match_coms [] [] coms)
    | None -> None
 ;;   
+
+(* push with invalid const still doesn't return the right thing hmmmmm *)
