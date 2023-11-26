@@ -72,7 +72,7 @@ let rec parse_com(): com parser =
    parse_push() <|> parse_pop () <|> parse_trace () <|>
    parse_add () <|> parse_sub () <|> parse_mul() <|> parse_div () <|>
    parse_and () <|> parse_or () <|> parse_not () <|>
-   parse_lt () <|> parse_gt() 
+   parse_lt () <|> parse_gt()
    (* <|> parse_empty () *)
 
 and parse_push(): com parser = 
@@ -248,6 +248,7 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
 (* starting function to begin parsing // need to convert to string list *)
 let interp (s : string) : string list option = (* YOUR CODE *)
    match string_parse (parse_coms ()) s with
+   | Some ([], _) -> None
    | Some (coms, _) -> Some(match_coms [] [] coms)
    | None -> None
 ;;   
