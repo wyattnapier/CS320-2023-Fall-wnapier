@@ -56,15 +56,15 @@ type coms = com list
 
 let parse_int : int parser =
    (let* _ = char '-' in let* x = natural in pure (-x))
-   <|> (let* x = natural in pure x) <|> fail
+   <|> (let* x = natural in pure x)
 let parse_bool : bool parser =
    (let* _ = keyword "True" in pure (true))
-   <|> (let* _ = keyword "False" in pure (false)) <|> fail
+   <|> (let* _ = keyword "False" in pure (false))
 let parse_unit: unit parser = 
-   let* _ = keyword "Unit" in pure () <|> fail
+   let* _ = keyword "Unit" in pure ()
 let parse_const : const parser = 
    (parse_int >>= fun i -> pure(Int i)) <|> (parse_bool >>= fun b -> pure(Bool b)) 
-   <|> (parse_unit >>= fun u -> pure (Unit)) <|> fail
+   <|> (parse_unit >>= fun u -> pure (Unit))
 
 (* *********** ********** *)
 
@@ -73,7 +73,6 @@ let rec parse_com(): com parser =
    parse_add () <|> parse_sub () <|> parse_mul() <|> parse_div () <|>
    parse_and () <|> parse_or () <|> parse_not () <|>
    parse_lt () <|> parse_gt()
-   (* <|> parse_empty () *)
 
 and parse_push(): com parser = 
    let* _ = keyword "Push" in
@@ -125,8 +124,7 @@ and parse_gt (): com parser =
    pure (Gt)
 
 let rec parse_coms(): coms parser = 
-   whitespaces >>
-   many (parse_com () << whitespaces << keyword ";") 
+   whitespaces >> many (parse_com () << whitespaces << keyword ";") 
 
 (* ******** end parser, begin match ********* *)
 
@@ -239,16 +237,9 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
 
 (* **************************** ************************  *)
 
-let interp (s : string) : string list option =
- (* pattern matching to handle the empty string that removes whitespaces *)
-   match string_parse (whitespaces) s with
-   |Some(_,[]) -> Some([])
-   |_ -> 
-      (* pattern matching for interpreter and parser *)
-      begin
-         match string_parse (parse_coms ()) s with
-         | Some ([], _) -> None (* parser returns nothing // return none *)
-         | Some (coms, _) -> Some(match_coms [] [] coms) (* parser returns something then interpret it *)
-         | None -> None
-      end
+let interp (s : string) : string list option =   
+   match string_parse (parse_coms ()) s with
+   | Some (coms, []) -> Some(match_coms [] [] coms) (* parser returns something then interpret it *)
+   | _ -> None (* parser returns nothing // return none *)
+   
 ;;   
