@@ -124,16 +124,9 @@ and parse_gt (): com parser =
    let* _ = keyword "Gt" in
    pure (Gt)
 
-(* and parse_empty () : com parser =
-   let* _ = keyword "" in
-   pure (Empty) *)
-
-
 let rec parse_coms(): coms parser = 
    whitespaces >>
-   many (parse_com () << keyword ";") 
-   
-   (* parse_empty() *)
+   many (parse_com () << whitespaces << keyword ";") 
 
 (* ******** end parser, begin match ********* *)
 
@@ -246,19 +239,16 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
 
 (* **************************** ************************  *)
 
-(* starting function to begin parsing // need to convert to string list *)
-let interp (s : string) : string list option = (* YOUR CODE *)
- (* add an if to handle the empty string that removes whitespaces *)
-   (* let empty = string_parse s << whitespaces in *)
+let interp (s : string) : string list option =
+ (* pattern matching to handle the empty string that removes whitespaces *)
    match string_parse (whitespaces) s with
    |Some(_,[]) -> Some([])
    |_ -> 
+      (* pattern matching for interpreter and parser *)
       begin
          match string_parse (parse_coms ()) s with
-         | Some ([], _) -> None
-         | Some (coms, _) -> Some(match_coms [] [] coms)
+         | Some ([], _) -> None (* parser returns nothing // return none *)
+         | Some (coms, _) -> Some(match_coms [] [] coms) (* parser returns something then interpret it *)
          | None -> None
       end
 ;;   
-
-(* push with invalid const still doesn't return the right thing hmmmmm *)
