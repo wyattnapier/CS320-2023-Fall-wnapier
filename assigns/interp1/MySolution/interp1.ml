@@ -192,7 +192,7 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
          begin
             match s with
             (* | _ :: [] -> "div from insufficient stack" :: t (* can lump in with other case later *) *)
-            | Int i :: Int j :: cs -> if j != 0 then match_coms (Int(i / j) :: cs) (t) (rest) else "div by 0" :: t
+            | Int i :: Int j :: cs -> if j != 0 then match_coms (Int(i / j) :: cs) (t) (rest) else "Panic" :: t
             (* | _ -> "div with wrong types" :: t *)
             | _ -> "Panic" :: t
          end
