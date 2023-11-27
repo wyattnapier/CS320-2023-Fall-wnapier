@@ -56,7 +56,7 @@ type coms = com list
 
 let parse_int : int parser =
    (let* _ = char '-' in let* x = natural in pure (-x))
-   <|> (let* x = natural in pure x)
+   <|> (let* x = natural in pure x) <|> fail
 let parse_bool : bool parser =
    (let* _ = keyword "True" in pure (true))
    <|> (let* _ = keyword "False" in pure (false)) <|> fail
@@ -247,10 +247,17 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
 
 (* starting function to begin parsing // need to convert to string list *)
 let interp (s : string) : string list option = (* YOUR CODE *)
-   match string_parse (parse_coms ()) s with
-   | Some ([], _) -> None
-   | Some (coms, _) -> Some(match_coms [] [] coms)
-   | None -> None
+ (* add an if to handle the empty string that removes whitespaces *)
+   (* let empty = string_parse s << whitespaces in *)
+   match string_parse (whitespaces) s with
+   |Some(_,[]) -> Some([])
+   |_ -> 
+      begin
+         match string_parse (parse_coms ()) s with
+         | Some ([], _) -> None
+         | Some (coms, _) -> Some(match_coms [] [] coms)
+         | None -> None
+      end
 ;;   
 
 (* push with invalid const still doesn't return the right thing hmmmmm *)
