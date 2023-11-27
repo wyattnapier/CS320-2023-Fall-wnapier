@@ -130,6 +130,7 @@ and parse_gt (): com parser =
 
 
 let rec parse_coms(): coms parser = 
+   whitespaces >>
    many (parse_com () << keyword ";") 
    
    (* parse_empty() *)
