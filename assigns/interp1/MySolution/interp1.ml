@@ -239,7 +239,7 @@ let rec match_coms (s: const list) (t: string list) (p:coms): string list =
 
 let interp (s : string) : string list option =   
    match string_parse (parse_coms ()) s with
-   | Some (coms, []) -> Some(match_coms [] [] coms) (* parser returns something then interpret it *)
-   | _ -> None (* parser returns nothing // return none *)
+   | Some (coms, []) -> Some(match_coms [] [] coms) (* parser returns something // interpret it *)
+   | _ -> None (* parser returns nothing or has failed parse // return none *)
    
 ;;   
