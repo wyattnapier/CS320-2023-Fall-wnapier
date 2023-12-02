@@ -63,9 +63,8 @@ and com =
 | Add | Sub | Mul | Div
 | And | Or | Not
 | Lt | Gt
-(* have all of the above already implemented *)
 | Bind | Lookup 
-| Fun of coms (* match for End *) | IfElse of coms * coms (* match for End *)
+| Fun of coms | IfElse of coms * coms
 | Call | Return
 
 and coms = com list
@@ -274,12 +273,16 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
    | Call :: p0 ->
       (match s with 
       (* the entire next line is SO scuffed*)
-      | Closure (f, vf, c) :: a :: s0 (* CallStack *) -> eval (a :: (Closure ("cc", v, p0)) :: s0) t ((f, (Closure (f, vf, c))) :: v) c
-      | []                          (* CallError2 *) -> eval [] ("Panic" :: t) [] []
-      | s0 :: []                    (* CallError3 *) -> eval [] ("Panic" :: t) [] []
-      | _                           (* CallError1 *) -> eval [] ("Panic" :: t) [] [])
-   | _ ->  eval [] ("Nada mas" :: t) [] []
-
+      | Closure (f, vf, c) :: a :: s0  (* CallStack *) -> eval (a :: (Closure ("cc", v, p0)) :: s0) t ((f, (Closure (f, vf, c))) :: v) c
+      | []                             (* CallError2 *) -> eval [] ("Panic" :: t) [] []
+      | s0 :: []                       (* CallError3 *) -> eval [] ("Panic" :: t) [] []
+      | _                              (* CallError1 *) -> eval [] ("Panic" :: t) [] [])
+   | Return :: p0 -> 
+      (match s with 
+      | Closure (f, vf, c) :: a :: s0  (* ReturnStack *) -> eval (a :: s0) t vf c
+      | []                             (* ReturnError2 *) -> eval [] ("Panic" :: t) [] []
+      | s0 :: []                       (* ReturnError3 *) -> eval [] ("Panic" :: t) [] []
+      | _                              (* ReturnError1 *) -> eval [] ("Panic" :: t) [] [])
 
 (* ------------------------------------------------------------ *)
 
