@@ -274,20 +274,12 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
    | Call :: p0 ->
       (match s with 
       (* the entire next line is SO scuffed*)
-      | Closure (f, vf, c) :: a :: s0 (* CallStack *) -> 
-         eval [a :: (Sym "cc", v, p0) :: s0] t [(f, (f, vf c)) :: v] c
-                                                         (* let ccSym = Sym "cc" in 
-                                                         (match ccSym with
-                                                         | Sym ccS -> let contClosure = Closure (ccS, v, p) in 
-                                                                      let newEnvClosure = Closure (f, vf, c) in
-                                                                      let newEnv = (f, newEnvClosure) in
-                                                                      let newStack = Closure(ccS, v, p0) in 
-                                                                      (* make newStack var? *)
-                                                                      eval [a :: newStack :: s0] t [newEnv :: vf] c (* correct aarguments in right order, just type errors *)
-                                                         | _ -> eval [] ("Expected sym" :: t) [] []) *)
+      | Closure (f, vf, c) :: a :: s0 (* CallStack *) -> eval (a :: (Closure ("cc", v, p0)) :: s0) t ((f, (Closure (f, vf, c))) :: v) c
       | []                          (* CallError2 *) -> eval [] ("Panic" :: t) [] []
-      | s0 :: []                    (* CallError3 *) -> eval [] ("Panic" :: t) [] [])
+      | s0 :: []                    (* CallError3 *) -> eval [] ("Panic" :: t) [] []
+      | _                           (* CallError1 *) -> eval [] ("Panic" :: t) [] [])
    | _ ->  eval [] ("Nada mas" :: t) [] []
+
 
 (* ------------------------------------------------------------ *)
 
