@@ -159,7 +159,7 @@ let toString (c : const) : string =
   | Bool false -> "False"
   | Unit -> "Unit"
   | Sym s -> s
-  | Closure (a, b, c) -> a (* should I use pattern matching instead? *)
+  | Closure (a, b, c) -> string_concat_list ["Fun<";a;">"]
 
 let list_concatenation lst1 lst2 =
    let fwork work =
@@ -167,63 +167,6 @@ let list_concatenation lst1 lst2 =
       list_foreach lst2 work
    in
    list_make_fwork fwork
-    
-(* print closure to help debug *)
-(* let environmentString (env : environment) : string =
-   let entryString (name, value) = name ^ ": " ^ toString value in
-   string_concat (List.map entryString env) ", "
- 
-let closureString (s, v, c) =
-   let sString = s in
-   let vString = environmentString v in
-   let cString = string_concat (List.map toString c) " " in
- 
-   string_concat [sString; vString; cString] " " *)
- 
-let envString (env : environment) : string =
-   let string_of_binding (symbol, value) =
-      Printf.sprintf "(%s, %s)" symbol (toString value)
-   in
-   let bindings_str = List.map string_of_binding env in
-   "[" ^ String.concat "; " bindings_str ^ "]"
-;;
-let rec comString (c : com) : string =
-   match c with
-   | Push const -> "Push " ^ toString const
-   | Pop -> "Pop"
-   | Swap -> "Swap"
-   | Trace -> "Trace"
-   | Add -> "Add"
-   | Sub -> "Sub"
-   | Mul -> "Mul"
-   | Div -> "Div"
-   | And -> "And"
-   | Or -> "Or"
-   | Not -> "Not"
-   | Lt -> "Lt"
-   | Gt -> "Gt"
-   | IfElse (c1, c2) -> "If " ^ comsString c1 ^ " Else " ^ comsString c2 ^ " End"
-   | Bind -> "Bind"
-   | Lookup -> "Lookup"
-   | Fun c -> "Fun " ^ comsString c ^ " End"
-   | Call -> "Call"
-   | Return -> "Return"
-   
-   and comsString (coms : coms) : string =
-   String.concat "; " (List.map comString coms)
-
-let closureString (s, v, c) = 
-   let sString = s in 
-   let cString = comsString c in
-   let vString = envString v in
-   string_init(string_length sString + string_length vString + string_length cString)(
-      (fun i ->
-         if i < string_length sString then string_get_at sString i
-         else if i < string_length sString + string_length vString then string_get_at vString (i - string_length sString)
-         else string_get_at cString (i - string_length sString + string_length vString)
-       )
-   )
-
 
 let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
   match p with
@@ -241,15 +184,6 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
       | s0 :: []        (* SwapError2 *) -> eval [] ("Panic" :: t) [] [])
    | Trace :: p0 ->
      (match s with
-     (* | c :: s0          (* TraceStack *) ->
-      let rec env_match (vs: environment) =
-         match vs with
-         | [] -> eval (Unit :: s0) ("Panic" :: t) [] []
-         | (name, value) :: rest ->
-            (match value with
-            | Closure (x, y, z) -> eval (Unit :: s0) (closureString (x, y, z) :: t) v p0
-            | _ -> env_match rest)
-         in env_match v *)
      | c:: s0 -> eval (Unit :: s0) (toString c :: t) v p0
      | []               (* TraceError *) -> eval [] ("Panic" :: t) [] [])
    | Add :: p0 ->
@@ -308,8 +242,8 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
      | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] [])
    | IfElse (c1, c2) :: p0 -> (* seems to work *)
       (match s with 
-      | Bool true :: s0     (* IfElseStackTrue *) -> eval s0 t v (list_concatenation c1 p0) (* check logic *)
-      | Bool false :: s0    (* IfElseStackFalse *) -> eval s0 t v (list_concatenation c2 p0) (* check logic *)
+      | Bool true :: s0     (* IfElseStackTrue *) -> eval s0 t v (list_concatenation c1 p0) 
+      | Bool false :: s0    (* IfElseStackFalse *) -> eval s0 t v (list_concatenation c2 p0)
       | []                  (* IfElseError2 *) -> eval [] ("Panic" :: t) [] []
       | _                   (* IfElseError1 *) -> eval [] ("Panic" :: t) [] [])
    | Bind :: p0 -> (* seems to work fine *)
@@ -365,7 +299,7 @@ let interp (s : string) : string list option =
 
 (* interp from file *)
 
-(* let read_file (fname : string) : string =
+let read_file (fname : string) : string =
   let fp = open_in fname in
   let s = string_make_fwork (fun work ->
       try
@@ -378,5 +312,5 @@ let interp (s : string) : string list option =
 
 let interp_file (fname : string) : string list option =
   let src = read_file fname in
-  interp src *)
+  interp src
 
