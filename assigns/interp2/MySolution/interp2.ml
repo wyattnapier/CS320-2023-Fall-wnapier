@@ -168,6 +168,62 @@ let list_concatenation lst1 lst2 =
    in
    list_make_fwork fwork
     
+(* print closure to help debug *)
+(* let environmentString (env : environment) : string =
+   let entryString (name, value) = name ^ ": " ^ toString value in
+   string_concat (List.map entryString env) ", "
+ 
+let closureString (s, v, c) =
+   let sString = s in
+   let vString = environmentString v in
+   let cString = string_concat (List.map toString c) " " in
+ 
+   string_concat [sString; vString; cString] " " *)
+ 
+let envString (env : environment) : string =
+   let string_of_binding (symbol, value) =
+      Printf.sprintf "(%s, %s)" symbol (toString value)
+   in
+   let bindings_str = List.map string_of_binding env in
+   "[" ^ String.concat "; " bindings_str ^ "]"
+;;
+let rec comString (c : com) : string =
+   match c with
+   | Push const -> "Push " ^ toString const
+   | Pop -> "Pop"
+   | Swap -> "Swap"
+   | Trace -> "Trace"
+   | Add -> "Add"
+   | Sub -> "Sub"
+   | Mul -> "Mul"
+   | Div -> "Div"
+   | And -> "And"
+   | Or -> "Or"
+   | Not -> "Not"
+   | Lt -> "Lt"
+   | Gt -> "Gt"
+   | IfElse (c1, c2) -> "If " ^ comsString c1 ^ " Else " ^ comsString c2 ^ " End"
+   | Bind -> "Bind"
+   | Lookup -> "Lookup"
+   | Fun c -> "Fun " ^ comsString c ^ " End"
+   | Call -> "Call"
+   | Return -> "Return"
+   
+   and comsString (coms : coms) : string =
+   String.concat "; " (List.map comString coms)
+
+let closureString (s, v, c) = 
+   let sString = s in 
+   let cString = comsString c in
+   let vString = envString v in
+   string_init(string_length sString + string_length vString + string_length cString)(
+      (fun i ->
+         if i < string_length sString then string_get_at sString i
+         else if i < string_length sString + string_length vString then string_get_at vString (i - string_length sString)
+         else string_get_at cString (i - string_length sString + string_length vString)
+       )
+   )
+
 
 let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
   match p with
@@ -178,14 +234,23 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
      (match s with
      | _ :: s0          (* PopStack *) -> eval s0 t v p0
      | []               (* PopError *) -> eval [] ("Panic" :: t) [] [])
-   | Swap :: p0 ->
+   | Swap :: p0 -> (* seems to work fine *)
       (match s with 
       | s0 :: s1 :: xs  (* SwapStack *) -> eval (s1 :: s0 :: xs) t v p0
       | []              (* SwapError1 *) -> eval [] ("Panic" :: t) [] []
       | s0 :: []        (* SwapError2 *) -> eval [] ("Panic" :: t) [] [])
    | Trace :: p0 ->
      (match s with
-     | c :: s0          (* TraceStack *) -> eval (Unit :: s0) (toString c :: t) v p0
+     (* | c :: s0          (* TraceStack *) ->
+      let rec env_match (vs: environment) =
+         match vs with
+         | [] -> eval (Unit :: s0) ("Panic" :: t) [] []
+         | (name, value) :: rest ->
+            (match value with
+            | Closure (x, y, z) -> eval (Unit :: s0) (closureString (x, y, z) :: t) v p0
+            | _ -> env_match rest)
+         in env_match v *)
+     | c:: s0 -> eval (Unit :: s0) (toString c :: t) v p0
      | []               (* TraceError *) -> eval [] ("Panic" :: t) [] [])
    | Add :: p0 ->
      (match s with
@@ -241,19 +306,19 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
      | _ :: _ :: s0         (* GtError1 *) -> eval [] ("Panic" :: t) [] []
      | []                   (* GtError2 *) -> eval [] ("Panic" :: t) [] []
      | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] [])
-   | IfElse (c1, c2) :: p0 -> 
+   | IfElse (c1, c2) :: p0 -> (* seems to work *)
       (match s with 
       | Bool true :: s0     (* IfElseStackTrue *) -> eval s0 t v (list_concatenation c1 p0) (* check logic *)
       | Bool false :: s0    (* IfElseStackFalse *) -> eval s0 t v (list_concatenation c2 p0) (* check logic *)
       | []                  (* IfElseError2 *) -> eval [] ("Panic" :: t) [] []
       | _                   (* IfElseError1 *) -> eval [] ("Panic" :: t) [] [])
-   | Bind :: p0 ->
+   | Bind :: p0 -> (* seems to work fine *)
       (match s with
       | Sym x :: value :: xs  (* BindStack *) -> eval xs t ((x, value) :: v) p0
       | []                    (* BindError2 *) -> eval [] ("Panic" :: t) [] []
       | _ :: []               (* BindError3 *) -> eval [] ("Panic" :: t) [] []
       | _                     (* BindError4 *) -> eval [] ("Panic" :: t) [] [])
-   | Lookup :: p0 ->
+   | Lookup :: p0 -> (* seems to work fine *)
       (match s with 
       | Sym x :: s0 -> 
          let rec env_match (vs: environment) =
@@ -263,17 +328,16 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
                                        else env_match rest
          in env_match v
       | []  (* LookupError2 *) -> eval [] ("Panic" :: t) [] []
-      | _   (* LookupError2 *) -> eval [] ("Panic" :: t) [] [])
+      | _   (* LookupError1 *) -> eval [] ("Panic" :: t) [] [])
    | Fun c :: p0 -> 
       (match s with 
-      | Sym x :: s0 (* FunStack *) -> let closure1 = Closure (x, v, c) in
-                                      eval (closure1 :: s0) t v p0
+      | Sym x :: s0 (* FunStack *) -> eval (Closure(x, v, c) :: s0) t v p0 (*; closureString Closure(x, v, c) *)
       | []          (* FunError2 *) -> eval [] ("Panic" :: t) [] []
       | _           (* FunError1 *) -> eval [] ("Panic" :: t) [] [])
    | Call :: p0 ->
       (match s with 
       (* the entire next line is SO scuffed*)
-      | Closure (f, vf, c) :: a :: s0  (* CallStack *) -> eval (a :: (Closure ("cc", v, p0)) :: s0) t ((f, (Closure (f, vf, c))) :: v) c
+      | Closure (f, vf, c) :: a :: s0  (* CallStack *) -> eval (a :: (Closure ("cc", v, p0)) :: s0) t ((f, (Closure (f, vf, c))) :: vf) c (* changed the environment update *)
       | []                             (* CallError2 *) -> eval [] ("Panic" :: t) [] []
       | s0 :: []                       (* CallError3 *) -> eval [] ("Panic" :: t) [] []
       | _                              (* CallError1 *) -> eval [] ("Panic" :: t) [] [])
@@ -281,9 +345,13 @@ let rec eval (s : stack) (t : trace) (v: environment) (p : prog) : trace =
       (match s with 
       | Closure (f, vf, c) :: a :: s0  (* ReturnStack *) -> eval (a :: s0) t vf c
       | []                             (* ReturnError2 *) -> eval [] ("Panic" :: t) [] []
+      (* | c :: s0 -> eval [] (toString(c) :: t) [] [] *)  (* this is a game changer - it makes poly work, but whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy *)
+      (* | Int c :: s0 -> eval [] (str_of_int(c) :: t) [] []*) (* added case just to try to figure this out *)
       | s0 :: []                       (* ReturnError3 *) -> eval [] ("Panic" :: t) [] []
-      | _                              (* ReturnError1 *) -> eval [] ("Panic" :: t) [] [])
-
+      | _                              (* ReturnError1 *) -> eval [] ("Panic" :: t) [] []) (* catches majority of errors *)
+ (* BUG HUNTING: 
+    must be in fun, call, or return
+ *)
 (* ------------------------------------------------------------ *)
 
 (* putting it all together [input -> parser -> eval -> output] *)
