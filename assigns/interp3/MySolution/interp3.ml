@@ -1,4 +1,6 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
+(* grab interp2 code and push stuff through it potentially *)
+#use "./../../interp2/MySolution/interp2.ml";;
 
 (*
 
@@ -328,4 +330,56 @@ let parse_prog (s : string) : expr =
   | Some (m, []) -> scope_expr m
   | _ -> raise SyntaxError
 
-let compile (s : string) : string = (* YOUR CODE *)
+let (@) = list_append
+let (^) = string_append
+
+let rec expr_to_coms (x: expr): coms = 
+  match x with
+  | Int x -> [Push (Int x);]
+  (* | UOpr(Neg, x) -> [Push (Int -x);] seems a bit sus change to UOpr? another case for negate *)
+  | Bool b -> [Push (Bool b);]  
+  | Unit -> [Push (Unit);]
+  | Var v -> [Push (Sym v);]
+  | BOpr(Add, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Add;]
+  | BOpr(Sub, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Sub;]
+  | BOpr(Mul, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Mul;]
+  | BOpr(Div, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Div;]
+  | BOpr(Mod, e1, e2) -> (expr_to_coms (BOpr(Sub, e1, BOpr(Mul, (BOpr (Div, e1, e2)), e1)))) @ [Mod;] (* got rid of this: [expr_to_coms e2]*)
+  | BOpr(Or, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Or;]
+  | BOpr(And, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [And;]
+  | UOpr(Not, e1) -> (expr_to_coms e) @ [Not;] (* made UOpr *)
+  | BOpr(Lt, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Lt;]
+  | BOpr(Gt, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Gt;]
+  | BOpr(Lte, e1, e2) -> (expr_to_coms UOpr(Not, BOpr(Gt, e1, e2))) @ [Lte;] (* got rid of: @ [expr_to_coms e1] *)
+  | BOpr(Gte, e1, e2) -> (expr_to_coms UOpr(Not, BOpr(Lt, e1, e2))) @ [Gte;] (* got rid of: @ [expr_to_coms e1] *)
+  | BOpr(Eq, e1, e2) -> (expr_to_coms UOpr(Not, BOpr(Or, BOpr(Lt, e1, e2), BOpr(Gt, e1, e2)))) @ [Eq;] (* got rid of: @ [expr_to_coms e1] *)
+  | Fun(s1, s2, ex) -> let param = [Push s2; Bind] @ (expr_to_coms ex) @ [Swap; Return] in [Push s1; Fun param] (* jason moment *)
+  | Ifte(e1, e2, e3) -> (expr_to_coms e1) @ [Ifte((expr_to_coms e2), (expr_to_coms e3))];
+
+(* add "end" to this as well for function and ifte *)
+let rec coms_to_slist (cs: coms) (sl: string list): string list =
+  match cs with
+  | [] -> sl
+  | Push c :: xs -> let elem = ("Push " ^ toString(c) ^ ";\n") in coms_to_slist(xs)(elem :: sl)
+  | Pop :: xs -> let elem = ("Pop;\n") in coms_to_slist(xs)(elem :: sl)
+  | Add :: xs -> let elem = ("Add;\n") in coms_to_slist(xs)(elem :: sl)
+  | Sub :: xs -> let elem = ("Sub;\n") in coms_to_slist(xs)(elem :: sl)
+  | Mul :: xs -> let elem = ("Mul;\n") in coms_to_slist(xs)(elem :: sl)
+  | Div :: xs -> let elem = ("Div;\n") in coms_to_slist(xs)(elem :: sl)
+  | Mod :: xs -> let elem = ("Mod;\n") in coms_to_slist(xs)(elem :: sl)
+  | Or :: xs -> let elem = ("Or;\n") in coms_to_slist(xs)(elem :: sl)
+  | And :: xs -> let elem = ("And;\n") in coms_to_slist(xs)(elem :: sl)
+  | Lt :: xs -> let elem = ("Lt;\n") in coms_to_slist(xs)(elem :: sl)
+  | Gt :: xs -> let elem = ("Gt;\n") in coms_to_slist(xs)(elem :: sl)
+  | Lte :: xs -> let elem = ("Lte;\n") in coms_to_slist(xs)(elem :: sl)
+  | Gte :: xs -> let elem = ("Gte;\n") in coms_to_slist(xs)(elem :: sl)
+  | Eq :: xs -> let elem = ("Eq;\n") in coms_to_slist(xs)(elem :: sl)
+  | Fun c :: xs -> let elem = ("Fun " ^ string_concat_list(list_reverse(coms_to_slist(c)([]))) ^";") in coms_to_slist(xs)(elem :: sl)
+  (* | Ifte  *)
+  (* | _ -> ["shat the bed" :: sl] *)
+
+let compile (s : string) : string =
+  let prog = parse_prog s in 
+  let scoped = scope_expr prog in
+  let matched_list = expr_to_coms scoped
+in string_concat_list(list_reverse(coms_to_slist(matched_list)([])))
