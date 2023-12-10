@@ -333,6 +333,20 @@ let parse_prog (s : string) : expr =
 let (@) = list_append
 let(^) = string_append
 
+(* 
+MOD:
+e1 - (e1 / e2 * e2)
+Push 1; 
+Push 2;
+Push 1; 
+Div;
+Push 2;
+Mul;
+Swap;
+Sub;
+Trace;
+*)
+
 let rec expr_to_coms (x: expr): coms = 
   match x with
   | Int x -> [Push (Int x);]
@@ -345,7 +359,7 @@ let rec expr_to_coms (x: expr): coms =
   | BOpr(Sub, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Sub;]
   | BOpr(Mul, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Mul;]
   | BOpr(Div, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Div;]
-  | BOpr(Mod, e1, e2) -> (expr_to_coms (BOpr(Sub, e1, BOpr(Mul, (BOpr (Div, e1, e2)), e1))))
+  | BOpr(Mod, e1, e2) -> (expr_to_coms (BOpr(Mul, e2, (BOpr (Div, e1, e2))))) @ (expr_to_coms e1) @ [Sub;] (* should be fixed *)
   | BOpr(Or, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Or;]
   | BOpr(And, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [And;]
   | UOpr(Not, e1) -> (expr_to_coms e1) @ [Not;] (* made UOpr *)
@@ -356,13 +370,13 @@ let rec expr_to_coms (x: expr): coms =
   | BOpr(Eq, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Or, BOpr(Lt, e1, e2), BOpr(Gt, e1, e2)))))(* got rid of: @ [expr_to_coms e1] *)
   | Fun(s1, s2, ex) -> let param = [Push (Sym s2); Bind] @ (expr_to_coms ex) @ [Swap; Return;] in [Push (Sym s1); Fun param] (* interp2 solution uses "Ret" instead *)
   | App(e1, e2) -> (expr_to_coms e1) @ (expr_to_coms e2) @ [Swap; Call;]
-  | Let(x, e1, e2) -> [Push (Sym x);] @ (expr_to_coms e1) @ [Bind;] @ (expr_to_coms e2)
+  | Let(x, e1, e2) -> (expr_to_coms e1) @ [Push (Sym x);] @ [Bind;] @ (expr_to_coms e2)
   | Seq (e1, e2) -> (expr_to_coms e1) @ (expr_to_coms e2) (* 2 then 1 or 1 then 2? *)
   | Ifte(e1, e2, e3) -> let condition = (expr_to_coms e1) in 
                         let branchTrue = (expr_to_coms e2) in 
                         let branchFalse = (expr_to_coms e3) in 
                         condition @ [IfElse(branchTrue, branchFalse)]
-  | Trace(e1) -> (expr_to_coms e1) @ [Trace;]
+  | Trace(e1) -> (expr_to_coms e1) @ [Trace; Pop;]
 
 (* add "end" to this as well for function and ifte *)
 let rec coms_to_slist (cs: coms) (sl: string list): string list =
@@ -391,11 +405,12 @@ let rec coms_to_slist (cs: coms) (sl: string list): string list =
 
 let compile (s : string) : string =
   let prog = parse_prog s in 
-  let scoped = scope_expr prog in
-  let matched_list = expr_to_coms scoped
+  (* let scoped = scope_expr prog in
+  let matched_list = expr_to_coms scoped *)
+  let matched_list = expr_to_coms prog
 in string_concat_list(list_reverse(coms_to_slist(matched_list)([])))
 
 (* no trace *)
-(* let full (s: string) =
+let full (s: string) =
   let s1 = compile s in
-  interp s1 *)
+  interp s1
