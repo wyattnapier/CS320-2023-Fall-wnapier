@@ -349,25 +349,29 @@ Trace;
 
 let rec expr_to_coms (x: expr): coms = 
   match x with
+  (* ************** consts **************** *)
   | Int x -> [Push (Int x);]
-  (* | UOpr(Neg, Int x) -> [Push (Int -x);] seems a bit sus change to UOpr? another case for negate *)
-  (* | UOpr(Neg, e1) -> (- expr_to_coms e1) *)
   | Bool b -> [Push (Bool b);]  
   | Unit -> [Push (Unit);]
-  | Var v -> [Push (Sym v);]
+  | Var v -> [Push (Sym v); Lookup;] 
+     (* not sure how to test this *)
+  (* ************** UOpr **************** *)
+  | UOpr(Neg, e1) -> (expr_to_coms e1) @ [Push (Int 0); Sub;]
+  | UOpr(Not, e1) -> (expr_to_coms e1) @ [Not;] (* not sure how to test this *)
+  (* ************** BOpr **************** *)
   | BOpr(Add, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Add;]
   | BOpr(Sub, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Sub;]
   | BOpr(Mul, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Mul;]
   | BOpr(Div, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Div;]
-  | BOpr(Mod, e1, e2) -> (expr_to_coms (BOpr(Mul, e2, (BOpr (Div, e1, e2))))) @ (expr_to_coms e1) @ [Sub;] (* should be fixed *)
+  | BOpr(Mod, e1, e2) -> (expr_to_coms (BOpr(Mul, e2, (BOpr (Div, e1, e2))))) @ (expr_to_coms e1) @ [Sub;]
   | BOpr(Or, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Or;]
   | BOpr(And, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [And;]
-  | UOpr(Not, e1) -> (expr_to_coms e1) @ [Not;] (* made UOpr *)
   | BOpr(Lt, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Lt;]
   | BOpr(Gt, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Gt;]
   | BOpr(Lte, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Gt, e1, e2))))
   | BOpr(Gte, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Lt, e1, e2))))
-  | BOpr(Eq, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Or, BOpr(Lt, e1, e2), BOpr(Gt, e1, e2)))))(* got rid of: @ [expr_to_coms e1] *)
+  | BOpr(Eq, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Or, BOpr(Lt, e1, e2), BOpr(Gt, e1, e2)))))
+    (* good through here *)
   | Fun(s1, s2, ex) -> let param = [Push (Sym s2); Bind] @ (expr_to_coms ex) @ [Swap; Return;] in [Push (Sym s1); Fun param] (* interp2 solution uses "Ret" instead *)
   | App(e1, e2) -> (expr_to_coms e1) @ (expr_to_coms e2) @ [Swap; Call;]
   | Let(x, e1, e2) -> (expr_to_coms e1) @ [Push (Sym x);] @ [Bind;] @ (expr_to_coms e2)
@@ -398,10 +402,9 @@ let rec coms_to_slist (cs: coms) (sl: string list): string list =
   | Lookup :: xs -> let elem = ("Lookup; ") in coms_to_slist(xs)(elem :: sl)
   | Call :: xs -> let elem = ("Call; ") in coms_to_slist(xs)(elem :: sl)
   | Return :: xs -> let elem = ("Trace; ") in coms_to_slist(xs)(elem :: sl)
-  | Fun c :: xs -> let elem = ("Fun " ^ string_concat_list(list_reverse(coms_to_slist(c)([]))) ^" End ") in coms_to_slist(xs)(elem :: sl)
-  | IfElse (t, f) :: xs -> let elem = ("If " ^ string_concat_list(list_reverse(coms_to_slist(t)([]))) ^" Else " ^ string_concat_list(list_reverse(coms_to_slist(f)([])))) ^ "End " in coms_to_slist(xs)(elem :: sl)
+  | Fun c :: xs -> let elem = ("Fun " ^ string_concat_list(list_reverse(coms_to_slist(c)([]))) ^"End; ") in coms_to_slist(xs)(elem :: sl)
+  | IfElse (t, f) :: xs -> let elem = ("If " ^ string_concat_list(list_reverse(coms_to_slist(t)([]))) ^"Else " ^ string_concat_list(list_reverse(coms_to_slist(f)([])))) ^ "End; " in coms_to_slist(xs)(elem :: sl)
   | Trace :: xs -> let elem = ("Trace; ") in coms_to_slist(xs)(elem :: sl)
-  (* | _ -> ["shat the bed" :: sl] *)
 
 let compile (s : string) : string =
   let prog = parse_prog s in 
