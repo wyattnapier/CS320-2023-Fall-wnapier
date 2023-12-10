@@ -333,53 +333,38 @@ let parse_prog (s : string) : expr =
 let (@) = list_append
 let(^) = string_append
 
-(* 
-MOD:
-e1 - (e1 / e2 * e2)
-Push 1; 
-Push 2;
-Push 1; 
-Div;
-Push 2;
-Mul;
-Swap;
-Sub;
-Trace;
-*)
-
 let rec expr_to_coms (x: expr): coms = 
   match x with
   (* ************** consts **************** *)
   | Int x -> [Push (Int x);]
   | Bool b -> [Push (Bool b);]  
   | Unit -> [Push (Unit);]
-  | Var v -> [Push (Sym v); Lookup;] 
-     (* not sure how to test this *)
+  | Var v -> [Push (Sym v); Lookup;]
   (* ************** UOpr **************** *)
   | UOpr(Neg, e1) -> (expr_to_coms e1) @ [Push (Int 0); Sub;]
-  | UOpr(Not, e1) -> (expr_to_coms e1) @ [Not;] (* not sure how to test this *)
+  | UOpr(Not, e1) -> (expr_to_coms e1) @ [Not;]
   (* ************** BOpr **************** *)
   | BOpr(Add, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Add;]
   | BOpr(Sub, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Sub;]
   | BOpr(Mul, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Mul;]
   | BOpr(Div, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Div;]
   | BOpr(Mod, e1, e2) -> (expr_to_coms (BOpr(Mul, e2, (BOpr (Div, e1, e2))))) @ (expr_to_coms e1) @ [Sub;]
-  | BOpr(Or, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Or;]
   | BOpr(And, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [And;]
+  | BOpr(Or, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Or;]
   | BOpr(Lt, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Lt;]
   | BOpr(Gt, e1, e2) -> (expr_to_coms e2) @ (expr_to_coms e1) @ [Gt;]
   | BOpr(Lte, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Gt, e1, e2))))
   | BOpr(Gte, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Lt, e1, e2))))
   | BOpr(Eq, e1, e2) -> (expr_to_coms (UOpr(Not, BOpr(Or, BOpr(Lt, e1, e2), BOpr(Gt, e1, e2)))))
     (* good through here *)
-  | Fun(s1, s2, ex) -> let param = [Push (Sym s2); Bind] @ (expr_to_coms ex) @ [Swap; Return;] in [Push (Sym s1); Fun param] (* interp2 solution uses "Ret" instead *)
+  | Fun(s1, s2, ex) -> let param = [Push (Sym s2); Bind;] @ (expr_to_coms ex) @ [Swap; Return;] in [Push (Sym s1); Fun (param);] (* interp2 solution uses "Ret" instead *)
   | App(e1, e2) -> (expr_to_coms e1) @ (expr_to_coms e2) @ [Swap; Call;]
-  | Let(x, e1, e2) -> (expr_to_coms e1) @ [Push (Sym x);] @ [Bind;] @ (expr_to_coms e2)
+  | Let(x, e1, e2) -> (expr_to_coms e1) @ [Push (Sym x); Bind;] @ (expr_to_coms e2)
   | Seq (e1, e2) -> (expr_to_coms e1) @ (expr_to_coms e2) (* 2 then 1 or 1 then 2? *)
   | Ifte(e1, e2, e3) -> let condition = (expr_to_coms e1) in 
                         let branchTrue = (expr_to_coms e2) in 
                         let branchFalse = (expr_to_coms e3) in 
-                        condition @ [IfElse(branchTrue, branchFalse)]
+                        condition @ [IfElse(branchTrue, branchFalse);]
   | Trace(e1) -> (expr_to_coms e1) @ [Trace; Pop;]
 
 (* add "end" to this as well for function and ifte *)
@@ -392,8 +377,8 @@ let rec coms_to_slist (cs: coms) (sl: string list): string list =
   | Sub :: xs -> let elem = ("Sub; ") in coms_to_slist(xs)(elem :: sl)
   | Mul :: xs -> let elem = ("Mul; ") in coms_to_slist(xs)(elem :: sl)
   | Div :: xs -> let elem = ("Div; ") in coms_to_slist(xs)(elem :: sl)
-  | Or :: xs -> let elem = ("Or; ") in coms_to_slist(xs)(elem :: sl)
   | And :: xs -> let elem = ("And; ") in coms_to_slist(xs)(elem :: sl)
+  | Or :: xs -> let elem = ("Or; ") in coms_to_slist(xs)(elem :: sl)
   | Not :: xs -> let elem = ("Not; ") in coms_to_slist(xs)(elem :: sl)
   | Lt :: xs -> let elem = ("Lt; ") in coms_to_slist(xs)(elem :: sl)
   | Gt :: xs -> let elem = ("Gt; ") in coms_to_slist(xs)(elem :: sl)
@@ -401,9 +386,10 @@ let rec coms_to_slist (cs: coms) (sl: string list): string list =
   | Bind :: xs -> let elem = ("Bind; ") in coms_to_slist(xs)(elem :: sl)
   | Lookup :: xs -> let elem = ("Lookup; ") in coms_to_slist(xs)(elem :: sl)
   | Call :: xs -> let elem = ("Call; ") in coms_to_slist(xs)(elem :: sl)
-  | Return :: xs -> let elem = ("Trace; ") in coms_to_slist(xs)(elem :: sl)
-  | Fun c :: xs -> let elem = ("Fun " ^ string_concat_list(list_reverse(coms_to_slist(c)([]))) ^"End; ") in coms_to_slist(xs)(elem :: sl)
-  | IfElse (t, f) :: xs -> let elem = ("If " ^ string_concat_list(list_reverse(coms_to_slist(t)([]))) ^"Else " ^ string_concat_list(list_reverse(coms_to_slist(f)([])))) ^ "End; " in coms_to_slist(xs)(elem :: sl)
+  | Return :: xs -> let elem = ("Return; ") in coms_to_slist(xs)(elem :: sl)
+  | Fun c :: xs -> let elem = ("Fun " ^ (string_concat_list(list_reverse(coms_to_slist c [] ))) ^"End; ") in coms_to_slist(xs)(elem :: sl)
+  | IfElse (t, f) :: xs -> let elem = ("If " ^ (string_concat_list(list_reverse(coms_to_slist t [] ))) ^" Else " ^ 
+                                      (string_concat_list(list_reverse(coms_to_slist f [] )))) ^ "End; " in coms_to_slist(xs)(elem :: sl)
   | Trace :: xs -> let elem = ("Trace; ") in coms_to_slist(xs)(elem :: sl)
 
 let compile (s : string) : string =
